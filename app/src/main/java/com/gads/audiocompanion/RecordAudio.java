@@ -5,9 +5,11 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,7 +22,8 @@ import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class RecordAudio extends AppCompatActivity {
-    private Button startbtn, stopbtn, playbtn, stopplay;
+    private Button startbtn, stopbtn, playbtn, stopplay, saveupload;
+    private EditText description;
     private MediaRecorder mRecorder;
     private MediaPlayer mPlayer;
     private static final String LOG_TAG = "AudioRecording";
@@ -30,15 +33,20 @@ public class RecordAudio extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record_audio);
-        startbtn = (Button)findViewById(R.id.btnRecord);
-        stopbtn = (Button)findViewById(R.id.btnStop);
-        playbtn = (Button)findViewById(R.id.btnPlay);
-        stopplay = (Button)findViewById(R.id.btnStopPlay);
+        startbtn = findViewById(R.id.btnRecord);
+        stopbtn = findViewById(R.id.btnStop);
+        playbtn = findViewById(R.id.btnPlay);
+        stopplay = findViewById(R.id.btnStopPlay);
+        saveupload = findViewById(R.id.btnSave);
+        description = findViewById(R.id.textDescription);
         stopbtn.setEnabled(false);
         playbtn.setEnabled(false);
         stopplay.setEnabled(false);
+        saveupload.setEnabled(false);
         mFileName = Environment.getExternalStorageDirectory().getAbsolutePath();
-        mFileName += "/AudioRecording.3gp";
+        mFileName += "/EACRecording.3gp";
+
+
 
         startbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,7 +81,8 @@ public class RecordAudio extends AppCompatActivity {
                 stopbtn.setEnabled(false);
                 startbtn.setEnabled(true);
                 playbtn.setEnabled(true);
-                stopplay.setEnabled(true);
+                stopplay.setEnabled(false);
+                saveupload.setEnabled(true);
                 mRecorder.stop();
                 mRecorder.release();
                 mRecorder = null;
@@ -110,6 +119,27 @@ public class RecordAudio extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(),"Playing Audio Stopped", Toast.LENGTH_SHORT).show();
             }
         });
+        saveupload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopbtn.setEnabled(false);
+                startbtn.setEnabled(true);
+                playbtn.setEnabled(true);
+                stopplay.setEnabled(false);
+                String descriptionText = description.getText().toString();
+                if (TextUtils.isEmpty(descriptionText)) {
+                    Toast.makeText(getApplicationContext(), "Please enter a description", Toast.LENGTH_LONG).show();
+                }
+                else{
+                    System.out.println(mFileName);
+                    mFileName = Environment.getExternalStorageDirectory().getAbsolutePath();
+                    mFileName += "/" + descriptionText +".3gp";
+
+                    Toast.makeText(getApplicationContext(), "File saved and uploaded as: \n" + mFileName, Toast.LENGTH_LONG).show();
+
+                }
+            }
+        });
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -121,6 +151,7 @@ public class RecordAudio extends AppCompatActivity {
                     if (permissionToRecord && permissionToStore) {
                         Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_LONG).show();
                     } else {
+
                         Toast.makeText(getApplicationContext(),"Permission Denied",Toast.LENGTH_LONG).show();
                     }
                 }

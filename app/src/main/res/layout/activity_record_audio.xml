@@ -27,4 +27,20 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="100dp"
         android:text="Stop Playing" />
+
+    <EditText
+        android:id="@+id/textDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Enter Description"
+        android:imeOptions="actionDone"
+        android:singleLine="true"/>
+
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="100dp"
+        android:text="Save and Upload" />
 </LinearLayout>
