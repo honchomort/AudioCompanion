@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,6 +25,7 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 public class RecordAudio extends AppCompatActivity {
     private Button startbtn, stopbtn, playbtn, stopplay, saveupload;
     private EditText description;
+    private TextView tvPath;
     private MediaRecorder mRecorder;
     private MediaPlayer mPlayer;
     private static final String LOG_TAG = "AudioRecording";
@@ -39,14 +41,13 @@ public class RecordAudio extends AppCompatActivity {
         stopplay = findViewById(R.id.btnStopPlay);
         saveupload = findViewById(R.id.btnSave);
         description = findViewById(R.id.textDescription);
+        tvPath = findViewById(R.id.tvPath);
         stopbtn.setEnabled(false);
         playbtn.setEnabled(false);
         stopplay.setEnabled(false);
         saveupload.setEnabled(false);
-        mFileName = Environment.getExternalStorageDirectory().getAbsolutePath();
-        mFileName += "/EACRecording.3gp";
-
-
+        mFileName = getFilesDir().getAbsolutePath();
+        mFileName += "/tempRecording.3gp";
 
         startbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,6 +87,7 @@ public class RecordAudio extends AppCompatActivity {
                 mRecorder.stop();
                 mRecorder.release();
                 mRecorder = null;
+                tvPath.setText(mFileName);
                 Toast.makeText(getApplicationContext(), "Recording Stopped", Toast.LENGTH_LONG).show();
             }
         });
@@ -135,7 +137,7 @@ public class RecordAudio extends AppCompatActivity {
                     mFileName = Environment.getExternalStorageDirectory().getAbsolutePath();
                     mFileName += "/" + descriptionText +".3gp";
 
-                    Toast.makeText(getApplicationContext(), "File saved and uploaded as: \n" + mFileName, Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getApplicationContext(), "File saved and uploaded as: \n" + mFileName, Toast.LENGTH_LONG).show();
 
                 }
             }

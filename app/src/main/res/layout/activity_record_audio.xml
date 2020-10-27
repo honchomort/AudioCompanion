@@ -43,4 +43,17 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="100dp"
         android:text="Save and Upload" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:id="@+id/tvPath"
+        />
+
+
+
+
+
+
 </LinearLayout>
