@@ -4,7 +4,6 @@ import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
-import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -17,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.File;
 import java.io.IOException;
 
 import static android.Manifest.permission.RECORD_AUDIO;
@@ -33,6 +33,11 @@ public class RecordAudio extends AppCompatActivity {
     public static final int REQUEST_AUDIO_PERMISSION_CODE = 1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        File file = new File (getExternalFilesDir("AudioCompanion") + "/AudioCompanion") ;
+
+        if (! file.exists()) {
+            file.mkdirs();
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record_audio);
         startbtn = findViewById(R.id.btnRecord);
@@ -46,8 +51,8 @@ public class RecordAudio extends AppCompatActivity {
         playbtn.setEnabled(false);
         stopplay.setEnabled(false);
         saveupload.setEnabled(false);
-        mFileName = getFilesDir().getAbsolutePath();
-        mFileName += "/tempRecording.3gp";
+        String savePath = getExternalCacheDir() + "/";
+        mFileName = savePath + "TempRecording.3gp";
 
         startbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -132,12 +137,19 @@ public class RecordAudio extends AppCompatActivity {
                 if (TextUtils.isEmpty(descriptionText)) {
                     Toast.makeText(getApplicationContext(), "Please enter a description", Toast.LENGTH_LONG).show();
                 }
-                else{
-                    System.out.println(mFileName);
-                    mFileName = Environment.getExternalStorageDirectory().getAbsolutePath();
-                    mFileName += "/" + descriptionText +".3gp";
+                else {
+                    File dir = getExternalCacheDir();
+                    if (dir.exists()) {
+                        File from = new File(dir, "TempRecording.3gp");
+                        File to = new File(dir, descriptionText + ".3gp");
+                        if (from.exists())
+                            from.renameTo(to);
+                    }
+                    File file = new File(getExternalCacheDir() + "/" + descriptionText + ".3gp");
+                    if (file.exists()) {
+                        Toast.makeText(getApplicationContext(), "File saved and uploaded as: \n" + descriptionText + ".3gp", Toast.LENGTH_LONG).show();
+                    }
 
-                    //Toast.makeText(getApplicationContext(), "File saved and uploaded as: \n" + mFileName, Toast.LENGTH_LONG).show();
 
                 }
             }
