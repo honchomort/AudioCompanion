@@ -3,6 +3,7 @@ package com.gads.audiocompanion;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -12,13 +13,23 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
 import java.io.File;
 import java.io.IOException;
 
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
@@ -31,15 +42,47 @@ public class RecordAudio extends AppCompatActivity {
     private static final String LOG_TAG = "AudioRecording";
     private static String mFileName = null;
     public static final int REQUEST_AUDIO_PERMISSION_CODE = 1;
+    FirebaseStorage mStorage;
+    FirebaseDatabase mDatabase;
+    String descriptionText = null;
+    Uri audioUri = null;
+
+    public boolean CheckPermissions() {
+        int result = ContextCompat.checkSelfPermission(getApplicationContext(), WRITE_EXTERNAL_STORAGE);
+        int result1 = ContextCompat.checkSelfPermission(getApplicationContext(), RECORD_AUDIO);
+        return result == PackageManager.PERMISSION_GRANTED && result1 == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void RequestPermissions() {
+        ActivityCompat.requestPermissions(RecordAudio.this, new String[]{RECORD_AUDIO, WRITE_EXTERNAL_STORAGE}, REQUEST_AUDIO_PERMISSION_CODE);
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_AUDIO_PERMISSION_CODE:
+                if (grantResults.length > 0) {
+                    boolean permissionToRecord = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                    boolean permissionToStore = grantResults[1] == PackageManager.PERMISSION_GRANTED;
+                    if (permissionToRecord && permissionToStore) {
+                        Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_LONG).show();
+                    } else {
+
+                        Toast.makeText(getApplicationContext(), "Permission Denied", Toast.LENGTH_LONG).show();
+                    }
+                }
+                break;
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        File file = new File (getExternalFilesDir("AudioCompanion") + "/AudioCompanion") ;
-
-        if (! file.exists()) {
-            file.mkdirs();
-        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record_audio);
+
+        mStorage = FirebaseStorage.getInstance();
+        mDatabase = FirebaseDatabase.getInstance();
+
+
+
         startbtn = findViewById(R.id.btnRecord);
         stopbtn = findViewById(R.id.btnStop);
         playbtn = findViewById(R.id.btnPlay);
@@ -129,55 +172,63 @@ public class RecordAudio extends AppCompatActivity {
         saveupload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopbtn.setEnabled(false);
-                startbtn.setEnabled(true);
-                playbtn.setEnabled(true);
-                stopplay.setEnabled(false);
-                String descriptionText = description.getText().toString();
-                if (TextUtils.isEmpty(descriptionText)) {
-                    Toast.makeText(getApplicationContext(), "Please enter a description", Toast.LENGTH_LONG).show();
-                }
-                else {
-                    File dir = getExternalCacheDir();
-                    if (dir.exists()) {
-                        File from = new File(dir, "TempRecording.3gp");
-                        File to = new File(dir, descriptionText + ".3gp");
-                        if (from.exists())
-                            from.renameTo(to);
-                    }
-                    File file = new File(getExternalCacheDir() + "/" + descriptionText + ".3gp");
-                    if (file.exists()) {
-                        Toast.makeText(getApplicationContext(), "File saved and uploaded as: \n" + descriptionText + ".3gp", Toast.LENGTH_LONG).show();
-                    }
 
+                if (ContextCompat.checkSelfPermission(RecordAudio.this, READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                    stopbtn.setEnabled(false);
+                    startbtn.setEnabled(true);
+                    playbtn.setEnabled(true);
+                    stopplay.setEnabled(false);
+                    descriptionText = description.getText().toString();
+                    if (TextUtils.isEmpty(descriptionText)) {
+                        Toast.makeText(getApplicationContext(), "Please enter a description", Toast.LENGTH_LONG).show();
+                    } else {
+                        File dir = getExternalCacheDir();
+                        if (dir.exists()) {
+                            File from = new File(dir, "TempRecording.3gp");
+                            File to = new File(dir, descriptionText + ".3gp");
+                            if (from.exists())
+                                from.renameTo(to);
+                            audioUri = Uri.fromFile(new File(getExternalCacheDir() + "/" + descriptionText + ".3gp"));
+                            uploadFile(audioUri);
 
+                        }
+                        File file = new File(getExternalCacheDir() + "/" + descriptionText + ".3gp");
+                        if (file.exists()) {
+                            Toast.makeText(getApplicationContext(), "File saved and uploaded as: \n" + descriptionText + ".3gp", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                } else {
+                    ActivityCompat.requestPermissions(RecordAudio.this, new String[]{READ_EXTERNAL_STORAGE}, 88);
                 }
             }
+
+            private void uploadFile(Uri audioUri) {
+
+                String uploadFileName = descriptionText + ".3gp";
+                StorageReference storageReference = mStorage.getReference();
+
+                storageReference.child("AudioUploads").child(uploadFileName).putFile(audioUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        Toast.makeText(RecordAudio.this, "File uploaded successfully", Toast.LENGTH_SHORT).show();
+
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(RecordAudio.this, "File not uploaded", Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
+
+                    }
+                });
+            }
+
+
+
         });
     }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        switch (requestCode) {
-            case REQUEST_AUDIO_PERMISSION_CODE:
-                if (grantResults.length> 0) {
-                    boolean permissionToRecord = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-                    boolean permissionToStore = grantResults[1] ==  PackageManager.PERMISSION_GRANTED;
-                    if (permissionToRecord && permissionToStore) {
-                        Toast.makeText(getApplicationContext(), "Permission Granted", Toast.LENGTH_LONG).show();
-                    } else {
 
-                        Toast.makeText(getApplicationContext(),"Permission Denied",Toast.LENGTH_LONG).show();
-                    }
-                }
-                break;
         }
-    }
-    public boolean CheckPermissions() {
-        int result = ContextCompat.checkSelfPermission(getApplicationContext(), WRITE_EXTERNAL_STORAGE);
-        int result1 = ContextCompat.checkSelfPermission(getApplicationContext(), RECORD_AUDIO);
-        return result == PackageManager.PERMISSION_GRANTED && result1 == PackageManager.PERMISSION_GRANTED;
-    }
-    private void RequestPermissions() {
-        ActivityCompat.requestPermissions(RecordAudio.this, new String[]{RECORD_AUDIO, WRITE_EXTERNAL_STORAGE}, REQUEST_AUDIO_PERMISSION_CODE);
-    }
-}
