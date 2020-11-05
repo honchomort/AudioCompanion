@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
@@ -204,13 +205,15 @@ public class RecordAudio extends AppCompatActivity {
 
             private void uploadFile(Uri audioUri) {
 
-                String uploadFileName = descriptionText + ".3gp";
-                StorageReference storageReference = mStorage.getReference();
+                final String uploadFileName = descriptionText + ".3gp";
+                final StorageReference storageReference = mStorage.getReference();
 
                 storageReference.child("AudioUploads").child(uploadFileName).putFile(audioUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                         Toast.makeText(RecordAudio.this, "File uploaded successfully", Toast.LENGTH_SHORT).show();
+                        Task<Uri> dUrl = storageReference.child("AudioUploads").child(uploadFileName).getDownloadUrl();
+                        System.out.println(dUrl);
 
                     }
                 }).addOnFailureListener(new OnFailureListener() {
