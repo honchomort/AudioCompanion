@@ -5,6 +5,7 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -81,7 +82,10 @@ public class RecordAudio extends AppCompatActivity {
         mStorage = FirebaseStorage.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
 
-
+        File folder = new File(RecordAudio.this.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "Your directory name");
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
 
         startbtn = findViewById(R.id.btnRecord);
         stopbtn = findViewById(R.id.btnStop);
@@ -94,8 +98,8 @@ public class RecordAudio extends AppCompatActivity {
         playbtn.setEnabled(false);
         stopplay.setEnabled(false);
         saveupload.setEnabled(false);
-        String savePath = getExternalCacheDir() + "/";
-        mFileName = savePath + "TempRecording.3gp";
+        String savePath = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/";
+        mFileName = savePath + "FindMe.3gp";
 
         startbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -182,19 +186,15 @@ public class RecordAudio extends AppCompatActivity {
                     if (TextUtils.isEmpty(descriptionText)) {
                         Toast.makeText(getApplicationContext(), "Please enter a description", Toast.LENGTH_LONG).show();
                     } else {
-                        File dir = getExternalCacheDir();
+                        File dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
                         if (dir.exists()) {
-                            File from = new File(dir, "TempRecording.3gp");
+                            File from = new File(dir, "FindMe.3gp");
                             File to = new File(dir, descriptionText + ".3gp");
                             if (from.exists())
                                 from.renameTo(to);
-                            audioUri = Uri.fromFile(new File(getExternalCacheDir() + "/" + descriptionText + ".3gp"));
+                            audioUri = Uri.fromFile(new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/" + descriptionText + ".3gp"));
                             uploadFile(audioUri);
 
-                        }
-                        File file = new File(getExternalCacheDir() + "/" + descriptionText + ".3gp");
-                        if (file.exists()) {
-                            Toast.makeText(getApplicationContext(), "File saved and uploaded as: \n" + descriptionText + ".3gp", Toast.LENGTH_LONG).show();
                         }
                     }
                 } else {
