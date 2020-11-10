@@ -7,10 +7,12 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,6 +42,8 @@ public class RecordAudio extends AppCompatActivity {
     private Button startbtn, stopbtn, playbtn, stopplay, saveupload;
     private EditText description;
     private TextView tvPath;
+    private Chronometer mChronometer;
+
     private MediaRecorder mRecorder;
     private MediaPlayer mPlayer;
     ProgressDialog mProgressDialog;
@@ -90,6 +94,7 @@ public class RecordAudio extends AppCompatActivity {
        //     folder.mkdirs();
        // }
 
+        mChronometer = findViewById(R.id.chrono);
         startbtn = findViewById(R.id.btnRecord);
         stopbtn = findViewById(R.id.btnStop);
         playbtn = findViewById(R.id.btnPlay);
@@ -108,6 +113,7 @@ public class RecordAudio extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(CheckPermissions()) {
+
                     stopbtn.setEnabled(true);
                     startbtn.setEnabled(false);
                     playbtn.setEnabled(false);
@@ -117,12 +123,15 @@ public class RecordAudio extends AppCompatActivity {
                     mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
                     mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
                     mRecorder.setOutputFile(mFileName);
+
                     try {
                         mRecorder.prepare();
                     } catch (IOException e) {
                         Log.e(LOG_TAG, "prepare() failed");
                     }
                     mRecorder.start();
+                    mChronometer.setBase(SystemClock.elapsedRealtime());
+                    mChronometer.start();
                     Toast.makeText(getApplicationContext(), "Recording Started", Toast.LENGTH_LONG).show();
                 }
                 else
@@ -143,6 +152,7 @@ public class RecordAudio extends AppCompatActivity {
                 mRecorder.release();
                 mRecorder = null;
                 tvPath.setText(mFileName);
+                mChronometer.stop();
                 Toast.makeText(getApplicationContext(), "Recording Stopped", Toast.LENGTH_LONG).show();
             }
         });
