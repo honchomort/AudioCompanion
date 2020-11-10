@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "354796516310",
+    "firebase_url": "https://audiocompanion-5293c.firebaseio.com",
+    "project_id": "audiocompanion-5293c",
+    "storage_bucket": "audiocompanion-5293c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:354796516310:android:2b2a904d698b68c6e86a77",
+        "android_client_info": {
+          "package_name": "com.gads.audiocompanion"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "354796516310-jcvtlu4spa037ik92b63ebm3obgee7k3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCySnAYtPh26wgxMzjRxyRUQSC1ZgJAjVw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "354796516310-jcvtlu4spa037ik92b63ebm3obgee7k3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
