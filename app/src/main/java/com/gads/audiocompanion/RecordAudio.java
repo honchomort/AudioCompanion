@@ -1,5 +1,6 @@
 package com.gads.audiocompanion;
 
+import android.app.ProgressDialog;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
@@ -21,7 +22,7 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
@@ -41,6 +42,7 @@ public class RecordAudio extends AppCompatActivity {
     private TextView tvPath;
     private MediaRecorder mRecorder;
     private MediaPlayer mPlayer;
+    ProgressDialog mProgressDialog;
     private static final String LOG_TAG = "AudioRecording";
     private static String mFileName = null;
     public static final int REQUEST_AUDIO_PERMISSION_CODE = 1;
@@ -83,10 +85,10 @@ public class RecordAudio extends AppCompatActivity {
         mStorage = FirebaseStorage.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
 
-        File folder = new File(RecordAudio.this.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "Your directory name");
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
+        //File folder = new File(RecordAudio.this.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "Your directory name");
+       // if (!folder.exists()) {
+       //     folder.mkdirs();
+       // }
 
         startbtn = findViewById(R.id.btnRecord);
         stopbtn = findViewById(R.id.btnStop);
@@ -205,15 +207,29 @@ public class RecordAudio extends AppCompatActivity {
 
             private void uploadFile(Uri audioUri) {
 
+                mProgressDialog = new ProgressDialog(RecordAudio.this);
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                mProgressDialog.setProgress(0);
+                mProgressDialog.setTitle("Uploading file...");
+                mProgressDialog.show();
+
+
                 final String uploadFileName = descriptionText + ".3gp";
                 final StorageReference storageReference = mStorage.getReference();
 
                 storageReference.child("AudioUploads").child(uploadFileName).putFile(audioUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        Toast.makeText(RecordAudio.this, "File uploaded successfully", Toast.LENGTH_SHORT).show();
-                        Task<Uri> dUrl = storageReference.child("AudioUploads").child(uploadFileName).getDownloadUrl();
-                        System.out.println(dUrl);
+
+                        String dUrl = storageReference.child("AudioUploads").child(uploadFileName).getDownloadUrl().toString();
+                        Toast.makeText(RecordAudio.this, "Success!", Toast.LENGTH_SHORT).show();
+                        tvPath.setText(dUrl);
+
+                        DatabaseReference reference = mDatabase.getReference();
+
+                        reference.child(descriptionText).setValue(dUrl);
+                        finish();
+
 
                     }
                 }).addOnFailureListener(new OnFailureListener() {
@@ -223,8 +239,10 @@ public class RecordAudio extends AppCompatActivity {
                     }
                 }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                     @Override
-                    public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
-
+                    public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
+                    double currentProgress =
+                            100.0 * (taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+mProgressDialog.setProgress((int) currentProgress);
                     }
                 });
             }
