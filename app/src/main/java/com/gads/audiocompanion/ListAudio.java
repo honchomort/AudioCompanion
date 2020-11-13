@@ -29,13 +29,14 @@ public class ListAudio extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_audio);
 
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("recordings");
 
         databaseReference.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                String fileName = snapshot.getKey(); // return fileName
-                String url = snapshot.getValue(String.class); //return URL for fileName
+                //String fileName = snapshot.getKey(); // return fileName
+                String fileName = snapshot.child("recDescription").getValue(String.class);
+                String url = snapshot.child("recUrl").getValue(String.class);
 
                 ((RAdapter) mRecyclerView.getAdapter()).update(fileName,url);
             }
