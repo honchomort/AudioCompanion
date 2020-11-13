@@ -33,6 +33,10 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.RECORD_AUDIO;
@@ -234,10 +238,18 @@ public class RecordAudio extends AppCompatActivity {
                         String dUrl = storageReference.child("AudioUploads").child(uploadFileName).getDownloadUrl().toString();
                         Toast.makeText(RecordAudio.this, "Success!", Toast.LENGTH_SHORT).show();
                         tvPath.setText(dUrl);
+                        Calendar calendar = Calendar.getInstance();
+                        long recordTime = calendar.getTimeInMillis();
+                        String recordID = Objects.toString(recordTime,null);
 
-                        DatabaseReference reference = mDatabase.getReference();
+                        DatabaseReference reference = mDatabase.getReference("recordings");
 
-                        reference.child(descriptionText).setValue(dUrl);
+                        Map<String, Recording> recording = new HashMap<>();
+                        recording.put(recordID, new Recording(descriptionText,dUrl,recordTime));
+                        reference.setValue(recording);
+
+                        //reference.child(descriptionText).setValue(dUrl);
+
                         finish();
 
 

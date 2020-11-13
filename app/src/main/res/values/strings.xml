@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Learning Audio Companion</string>
+    <string name="btn_download_text">Download</string>
 </resources>
